@@ -1,9 +1,6 @@
-from flask import Flask, request, redirect
-import jinja2
+from flask import Flask, request, redirect,render_template
 import os
 import re
-template_dir = os.path.join(os.path.dirname(__file__), "templates")
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir), autoescape = True)
 app = Flask(__name__)
 app.config['DEBUG'] = True
 def is_empty(field):
@@ -15,7 +12,8 @@ def is_invalid_char(field):
     for char in field:
         if char.isspace():
             return True
-    return False
+    else:
+        return False
 def is_invalid_length(field):
     if len(field) > 3 and len(field) < 20:
         return False
@@ -35,8 +33,7 @@ def is_invalid_email(field):
         return True
 @app.route("/")
 def index():
-    template = jinja_env.get_template("signup_form.html")
-    return template.render()
+    return render_template ("signup_form.html")
 @app.route("/", methods=["POST"])
 def validate_signup_form():
     username = request.form["username"]
@@ -68,15 +65,15 @@ def validate_signup_form():
             verify_password_error = invalid_verify_pass_msg
     if is_invalid_email(email):
         email_error = invalid_email_msg
+
     if not username_error and not password_error and not verify_password_error and not email_error:
         return redirect("/welcome?username={0}".format(username))
     else:
-        template = jinja_env.get_template("signup_form.html")
-        return template.render(username_error=username_error, password_error=password_error,
+        return render_template("signup_form.html",username=username, password='', verify='', email=email,
+                               username_error=username_error, password_error=password_error,
                                verify_password_error=verify_password_error, email_error=email_error)
 @app.route("/welcome")
 def welcome():
     username = request.args.get("username")
-    template = jinja_env.get_template("signup_welcome.html")
-    return template.render(name=username)
+    return render_template("signup_welcome.html",name=username)
 app.run()
